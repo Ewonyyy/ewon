@@ -237,8 +237,8 @@ a {
 
 .copyright {
   font-family: 'PT Mono', sans-serif;
-  font-size: 18px;
-  line-height: 20px;
+  font-size: 14px;
+  /*line-height: 20px;*/
   font-weight: 400;
   letter-spacing: -0.4px;
 }
@@ -332,7 +332,7 @@ a {
   width: 800px;
   max-width: 70%;
   margin-top: 80px;
-  margin-bottom: 300px;
+  margin-bottom: 30px;
   font-size: 36px;
   line-height: 44px;
   letter-spacing: -0.75px;
@@ -340,7 +340,8 @@ a {
 
 .about-social-links {
   display: inline-block;
-  margin-top: 10px;
+  /*margin-top: 10px;*/
+  margin-bottom: 80px;
   padding-right: 15px;
   padding-left: 15px;
   -webkit-transition: color 100ms ease;
@@ -677,8 +678,8 @@ a {
 }
 
 .contact-block {
-  margin-top: 70px;
-  margin-bottom: 240px;
+  /*margin-top: 70px;*/
+  margin-bottom: 50px;
 }
 
 .contact-info {
