@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>맥북 0 → Claude Code 셋업 가이드</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --bg: #0b0d12;
+                --bg-elev: #11141b;
+                --bg-code: #0a0c11;
+                --border: #1f2430;
+                --border-strong: #2a3142;
+                --text: #e6e8ee;
+                --text-muted: #8b91a1;
+                --text-dim: #5c6273;
+                --brand: #7f56d9;
+                --brand-2: #a48afb;
+                --brand-bg: rgba(127, 86, 217, 0.12);
+                --success: #12b76a;
+                --warning: #f79009;
+                --danger: #f04438;
+                --accent: #2dd4bf;
+                --radius: 10px;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+                font-size: 16px;
+                line-height: 1.65;
+                -webkit-font-smoothing: antialiased;
+            }
+            .layout {
+                display: grid;
+                grid-template-columns: 280px 1fr;
+                min-height: 100vh;
+            }
+            aside {
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                border-right: 1px solid var(--border);
+                background: var(--bg-elev);
+                padding: 28px 22px;
+                overflow-y: auto;
+            }
+            aside .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 700;
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+            aside .brand .dot {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                background: linear-gradient(
+                    135deg,
+                    var(--brand),
+                    var(--brand-2)
+                );
+                display: grid;
+                place-items: center;
+                font-size: 14px;
+            }
+            aside .sub {
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-bottom: 24px;
+            }
+            aside nav {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            aside nav a {
+                color: var(--text-muted);
+                text-decoration: none;
+                padding: 7px 10px;
+                border-radius: 6px;
+                font-size: 13.5px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.1s linear;
+            }
+            aside nav a:hover {
+                color: var(--text);
+                background: var(--border);
+            }
+            aside nav a .num {
+                width: 22px;
+                height: 22px;
+                background: var(--bg);
+                border: 1px solid var(--border-strong);
+                border-radius: 5px;
+                display: grid;
+                place-items: center;
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text-muted);
+                font-family: "JetBrains Mono", monospace;
+            }
+            main {
+                padding: 60px 80px;
+                max-width: 980px;
+            }
+            .hero {
+                margin-bottom: 64px;
+            }
+            .hero .pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 5px 11px;
+                background: var(--brand-bg);
+                color: var(--brand-2);
+                font-size: 12.5px;
+                font-weight: 500;
+                border-radius: 999px;
+                border: 1px solid rgba(127, 86, 217, 0.25);
+                margin-bottom: 18px;
+            }
+            h1 {
+                font-size: 48px;
+                line-height: 1.1;
+                font-weight: 700;
+                margin: 0 0 14px;
+                letter-spacing: -0.02em;
+            }
+            h1 .accent {
+                background: linear-gradient(
+                    135deg,
+                    var(--brand-2),
+                    var(--accent)
+                );
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .lede {
+                font-size: 19px;
+                color: var(--text-muted);
+                max-width: 720px;
+                margin: 0;
+            }
+            .meta {
+                display: flex;
+                gap: 14px;
+                margin-top: 26px;
+                flex-wrap: wrap;
+            }
+            .meta .chip {
+                background: var(--bg-elev);
+                border: 1px solid var(--border);
+                padding: 8px 14px;
+                border-radius: 8px;
+                font-size: 13px;
+                color: var(--text-muted);
+            }
+            .meta .chip strong {
+                color: var(--text);
+                font-weight: 600;
+            }
+            section.step {
+                margin-bottom: 56px;
+                scroll-margin-top: 24px;
+            }
+            section.step .header {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 14px;
+            }
+            section.step .step-badge {
+                width: 38px;
+                height: 38px;
+                background: var(--brand-bg);
+                color: var(--brand-2);
+                border: 1px solid rgba(127, 86, 217, 0.3);
+                border-radius: 10px;
+                display: grid;
+                place-items: center;
+                font-weight: 700;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 15px;
+            }
+            section.step h2 {
+                font-size: 26px;
+                font-weight: 700;
+                margin: 0;
+                letter-spacing: -0.01em;
+            }
+            section.step .desc {
+                color: var(--text-muted);
+                margin: 0 0 18px;
+                font-size: 15px;
+            }
+            section.step .time {
+                font-size: 12px;
+                color: var(--text-dim);
+                margin-left: auto;
+                font-family: "JetBrains Mono", monospace;
+                background: var(--bg-elev);
+                padding: 4px 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border);
+            }
+            h3 {
+                font-size: 17px;
+                font-weight: 600;
+                margin: 22px 0 8px;
+                color: var(--text);
+            }
+            p {
+                margin: 0 0 12px;
+                color: var(--text);
+            }
+            p.muted {
+                color: var(--text-muted);
+                font-size: 14.5px;
+            }
+            pre {
+                background: var(--bg-code);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px 18px;
+                overflow-x: auto;
+                margin: 8px 0 16px;
+                position: relative;
+            }
+            pre code {
+                font-family: "JetBrains Mono", monospace;
+                font-size: 13.5px;
+                line-height: 1.7;
+                color: #e6e8ee;
+            }
+            .lang-tag {
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                font-size: 10.5px;
+                color: var(--text-dim);
+                font-family: "JetBrains Mono", monospace;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            code:not(pre code) {
+                background: var(--bg-elev);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 0.88em;
+                color: var(--brand-2);
+                border: 1px solid var(--border);
+            }
+            .callout {
+                border-left: 3px solid var(--brand);
+                background: var(--brand-bg);
+                padding: 14px 18px;
+                border-radius: 0 var(--radius) var(--radius) 0;
+                margin: 14px 0;
+                font-size: 14.5px;
+            }
+            .callout.warn {
+                border-left-color: var(--warning);
+                background: rgba(247, 144, 9, 0.1);
+            }
+            .callout.info {
+                border-left-color: var(--accent);
+                background: rgba(45, 212, 191, 0.08);
+            }
+            .callout strong {
+                color: var(--text);
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 12px 0 18px;
+                font-size: 14px;
+            }
+            th,
+            td {
+                text-align: left;
+                padding: 10px 12px;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                color: var(--text-muted);
+                font-weight: 600;
+                font-size: 12.5px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                background: var(--bg-elev);
+            }
+            td code {
+                font-size: 0.85em;
+            }
+            ul,
+            ol {
+                padding-left: 22px;
+            }
+            li {
+                margin-bottom: 6px;
+                color: var(--text);
+            }
+            .check-list {
+                list-style: none;
+                padding: 0;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .check-list li {
+                background: var(--bg-elev);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 10px 14px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .check-list li::before {
+                content: "✓";
+                color: var(--success);
+                font-weight: 700;
+            }
+            footer {
+                margin-top: 80px;
+                padding-top: 30px;
+                border-top: 1px solid var(--border);
+                color: var(--text-muted);
+                font-size: 13px;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .badge {
+                display: inline-block;
+                padding: 2px 8px;
+                font-size: 11px;
+                font-weight: 600;
+                border-radius: 4px;
+                font-family: "JetBrains Mono", monospace;
+            }
+            .badge.success {
+                background: rgba(18, 183, 106, 0.15);
+                color: var(--success);
+            }
+            .badge.warn {
+                background: rgba(247, 144, 9, 0.15);
+                color: var(--warning);
+            }
+
+            @media (max-width: 1100px) {
+                .layout {
+                    grid-template-columns: 1fr;
+                }
+                aside {
+                    position: static;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                main {
+                    padding: 40px 24px;
+                }
+                h1 {
+                    font-size: 36px;
+                }
+                .check-list {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layout">
+            <aside>
+                <div class="brand">
+                    <span class="dot">⚡</span>
+                    <span>Mac Setup Guide</span>
+                </div>
+                <p class="sub">맥북 0 → Claude Code 풀셋업</p>
+                <nav>
+                    <a href="#step-prep"><span class="num">▶</span>터미널 열기</a>
+                    <a href="#step-0"><span class="num">0</span>Xcode CLT</a>
+                    <a href="#step-1"><span class="num">1</span>zsh 셋업</a>
+                    <a href="#step-2"><span class="num">2</span>Homebrew</a>
+                    <a href="#step-3"><span class="num">3</span>Ghostty</a>
+                    <a href="#step-4"><span class="num">4</span>Node.js</a>
+                    <a href="#step-5"><span class="num">5</span>Claude Code</a>
+                    <a href="#step-6"><span class="num">6</span>Git & GitHub</a>
+                    <a href="#step-7"><span class="num">7</span>OMC</a>
+                    <a href="#step-8"><span class="num">8</span>Figma MCP</a>
+                    <a href="#step-9"><span class="num">9</span>에디터</a>
+                    <a href="#step-10"><span class="num">10</span>프로젝트 시작</a>
+                    <a href="#checklist"><span class="num">✓</span>체크리스트</a>
+                    <a href="#troubleshoot"><span class="num">!</span>트러블슈팅</a>
+                </nav>
+            </aside>
+
+            <main>
+                <div class="hero">
+                    <span class="pill">📦 macOS · M-series 신규 셋업</span>
+                    <h1>M시리즈 맥북 처음 켰을 때부터<br /><span class="accent">Claude Code 풀셋업까지</span></h1>
+                    <p class="lede">
+                        Apple Silicon(M1/M2/M3/M4) 깡통 맥북에서 시작해서 zsh · Homebrew · Ghostty · Node ·
+                        Claude Code · OMC · Figma MCP까지. 약 40분이면 디자인 시스템
+                        작업 환경이 완성됩니다.
+                    </p>
+                    <div class="meta">
+                        <div class="chip">⏱️ <strong>약 30~40분</strong></div>
+                        <div class="chip">🍎 <strong>M-series 전용</strong></div>
+                        <div class="chip">🖥️ <strong>macOS 14+ (Sonoma 이상)</strong></div>
+                        <div class="chip">📅 <strong>2026.04 기준</strong></div>
+                    </div>
+                </div>
+
+                <!-- PREP: 터미널 열기 -->
+                <section class="step" id="step-prep">
+                    <div class="header">
+                        <div class="step-badge">▶</div>
+                        <h2>준비 · 터미널이 뭔가요?</h2>
+                        <span class="time">~2분</span>
+                    </div>
+                    <p class="desc">
+                        <strong>터미널(Terminal)</strong>은 마우스 클릭 대신 <strong>명령어로 컴퓨터를 조작하는 검정 창</strong>입니다.
+                        개발자가 거의 모든 셋업 작업을 여기서 합니다. 처음엔 무서워 보여도, 명령어 한 줄씩만 따라치면 됩니다.
+                    </p>
+
+                    <h3>1) Terminal.app 실행하기</h3>
+                    <p>맥에는 <strong>기본 터미널 앱</strong>이 처음부터 깔려있습니다. 세 가지 방법 중 아무거나:</p>
+                    <ul>
+                        <li>
+                            <strong>Spotlight 검색 (가장 빠름)</strong> ·
+                            <code>⌘ + Space</code> 누르고 → "터미널" 또는 "terminal" 입력 → Enter
+                        </li>
+                        <li>
+                            <strong>Launchpad</strong> · F4 키 → 폴더 "기타(Other)" → "터미널" 클릭
+                        </li>
+                        <li>
+                            <strong>Finder</strong> · 응용 프로그램 → 유틸리티 → 터미널.app
+                        </li>
+                    </ul>
+
+                    <h3>2) 터미널 화면 이해하기</h3>
+                    <p>처음 열면 이런 형태의 글자가 보입니다:</p>
+                    <pre><span class="lang-tag">terminal</span><code>ewonyu@MacBook ~ %</code></pre>
+                    <p class="muted">
+                        해석: <strong>사용자명@컴퓨터이름 현재위치 %</strong> — <code>%</code> 뒤에 깜빡이는 커서가 명령어 입력 자리.
+                        <code>~</code> 표시는 "내 홈 폴더"를 의미.
+                    </p>
+
+                    <h3>3) 첫 명령어 시도</h3>
+                    <p>가볍게 손에 익혀봅시다. 아래를 한 줄씩 치고 Enter:</p>
+                    <pre><span class="lang-tag">terminal</span><code>pwd          # 현재 위치 출력 (Print Working Directory)
+ls           # 현재 폴더의 파일 목록 (LiSt)
+whoami       # 내 사용자명
+date         # 현재 시각</code></pre>
+                    <p class="muted">
+                        <code>#</code> 뒤는 주석(설명)이라 안 쳐도 됩니다. 명령어만 치고 Enter.
+                    </p>
+
+                    <div class="callout">
+                        <strong>💡 3가지만 기억하세요</strong>
+                        <ul style="margin: 8px 0 0">
+                            <li><strong>복사·붙여넣기 가능</strong> — 가이드의 코드블록 복사해서 ⌘+V 하면 됩니다</li>
+                            <li><strong>Enter를 쳐야 실행</strong> — 입력만 하고 멍 때리면 아무 일도 안 일어남</li>
+                            <li><strong>비밀번호 입력 시 화면에 안 보임</strong> — 별표(*)도 안 뜨지만 정상. 그냥 치고 Enter</li>
+                        </ul>
+                    </div>
+
+                    <h3>4) 터미널 닫기 / 다시 열기</h3>
+                    <pre><span class="lang-tag">terminal</span><code>exit         # 터미널 세션 종료</code></pre>
+                    <p class="muted">
+                        또는 그냥 창 닫기(⌘+W). 다음 작업 때 다시 Spotlight로 열면 됩니다.
+                    </p>
+
+                    <div class="callout info">
+                        <strong>📍 다음 단계부터</strong> · 이 가이드의 모든 코드블록은 <strong>터미널에 붙여넣고 Enter</strong>치면 됩니다.
+                        나중에 Step 3에서 더 좋은 터미널인 <strong>Ghostty</strong>로 갈아타지만,
+                        그 전까지는 기본 Terminal.app으로 진행합니다.
+                    </div>
+                </section>
+
+                <!-- STEP 0 -->
+                <section class="step" id="step-0">
+                    <div class="header">
+                        <div class="step-badge">0</div>
+                        <h2>Xcode Command Line Tools</h2>
+                        <span class="time">~10분</span>
+                    </div>
+                    <p class="desc">
+                        모든 개발 도구의 기반. Git, clang, make 같은 핵심 유틸리티가 여기 들어있어요.
+                        <strong>전체 Xcode(20GB+)</strong>는 안 깔아도 됩니다.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>xcode-select --install</code></pre>
+                    <p class="muted">팝업이 뜨면 "설치" 클릭 → 5~10분 다운로드.</p>
+
+                    <h3>설치 확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>git --version       # git version 2.x.x
+clang --version     # Apple clang version 15.x.x</code></pre>
+                </section>
+
+                <!-- STEP 1 -->
+                <section class="step" id="step-1">
+                    <div class="header">
+                        <div class="step-badge">1</div>
+                        <h2>zsh 셋업</h2>
+                        <span class="time">~10분</span>
+                    </div>
+                    <p class="desc">
+                        macOS Catalina(2019) 이후로 <strong>zsh가 기본 셸</strong>입니다.
+                        설치는 필요 없고, 환경 설정과 oh-my-zsh로 사용성을 끌어올립니다.
+                    </p>
+
+                    <h3>1) 현재 셸 확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>echo $SHELL          # /bin/zsh 가 나오면 OK
+zsh --version        # zsh 5.x.x</code></pre>
+                    <div class="callout info">
+                        <strong>참고</strong> · 만약 bash가 나오면(오래된 macOS) 다음 명령으로 zsh로 전환:
+                        <pre style="margin-top: 10px"><code>chsh -s /bin/zsh</code></pre>
+                    </div>
+
+                    <h3>2) ~/.zshrc 기본 파일 만들기</h3>
+                    <p>홈 디렉토리에 zsh 설정 파일이 없으면 생성합니다.</p>
+                    <pre><span class="lang-tag">terminal</span><code>touch ~/.zshrc</code></pre>
+
+                    <h3>3) Oh My Zsh 설치 (강력 추천)</h3>
+                    <p class="muted">
+                        zsh 플러그인·테마·자동완성을 한방에 깔아주는 프레임워크. 거의 표준입니다.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"</code></pre>
+                    <p class="muted">
+                        설치되면 ~/.zshrc가 자동으로 백업되고 새 파일로 교체됩니다.
+                    </p>
+
+                    <h3>4) 추천 플러그인 추가</h3>
+                    <pre><span class="lang-tag">terminal</span><code># 자동완성 제안 (이전 명령어 기반)
+git clone https://github.com/zsh-users/zsh-autosuggestions \
+  ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+# 문법 하이라이팅
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
+  ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting</code></pre>
+
+                    <h3>5) ~/.zshrc 편집</h3>
+                    <pre><span class="lang-tag">terminal</span><code>nano ~/.zshrc       # 또는 'code ~/.zshrc' (VS Code 깐 후)</code></pre>
+                    <p>아래 줄을 찾아서 플러그인 추가:</p>
+                    <pre><span class="lang-tag">~/.zshrc</span><code>plugins=(
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+# 테마 (기본은 robbyrussell, 더 화려한 거 원하면 agnoster, powerlevel10k)
+ZSH_THEME="robbyrussell"</code></pre>
+
+                    <h3>6) 적용</h3>
+                    <pre><span class="lang-tag">terminal</span><code>source ~/.zshrc</code></pre>
+                    <div class="callout">
+                        <strong>💡 팁</strong> · 이제 명령어 일부만 입력해도 회색으로 자동완성 제안이 뜨고,
+                        명령어가 유효하면 초록색·잘못되면 빨간색으로 색이 바뀝니다.
+                    </div>
+                </section>
+
+                <!-- STEP 2 -->
+                <section class="step" id="step-2">
+                    <div class="header">
+                        <div class="step-badge">2</div>
+                        <h2>Homebrew</h2>
+                        <span class="time">~5분</span>
+                    </div>
+                    <p class="desc">
+                        macOS 패키지 매니저. <code>brew install &lt;도구&gt;</code>로 거의 모든 개발도구 설치.
+                    </p>
+
+                    <h3>설치</h3>
+                    <pre><span class="lang-tag">terminal</span><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
+
+                    <h3>PATH 등록</h3>
+                    <p class="muted">
+                        M-series에서 Homebrew는 <code>/opt/homebrew</code>에 깔립니다. zsh 환경이므로 <code>~/.zprofile</code>에 등록:
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"</code></pre>
+                    <div class="callout info">
+                        <strong>💡 왜 ~/.zprofile?</strong> · 로그인 시 1회 로드되는 파일이라
+                        PATH 같은 환경변수 등록에 적합합니다. ~/.zshrc는 매 셸 세션마다 로드되어
+                        명령어 alias·플러그인용으로 쓰입니다.
+                    </div>
+
+                    <h3>확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>brew --version       # Homebrew 4.x.x
+brew doctor          # 환경 진단</code></pre>
+                </section>
+
+                <!-- STEP 3 -->
+                <section class="step" id="step-3">
+                    <div class="header">
+                        <div class="step-badge">3</div>
+                        <h2>Ghostty 터미널</h2>
+                        <span class="time">~1분</span>
+                    </div>
+                    <p class="desc">
+                        Apple 출신 엔지니어가 만든 GPU 가속 터미널.
+                        Terminal.app 대체용으로 빠르고 가볍습니다.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>brew install --cask ghostty</code></pre>
+                    <p class="muted">
+                        설치 후 Spotlight(⌘+Space) → "Ghostty" → 이후 모든 작업은 Ghostty에서.
+                    </p>
+                    <p>커스터마이즈 파일 위치: <code>~/.config/ghostty/config</code></p>
+                </section>
+
+                <!-- STEP 4 -->
+                <section class="step" id="step-4">
+                    <div class="header">
+                        <div class="step-badge">4</div>
+                        <h2>Node.js</h2>
+                        <span class="time">~3분</span>
+                    </div>
+                    <p class="desc">
+                        Claude Code, OMC, React 프로젝트 모두 Node 위에서 동작.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>brew install node</code></pre>
+
+                    <h3>확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>node -v              # v20.x 이상
+npm -v               # 11.x 이상</code></pre>
+
+                    <div class="callout info">
+                        <strong>여러 Node 버전 관리</strong> · 프로젝트별로 Node 버전을 바꿔야 할 일이 생기면
+                        <code>brew install fnm</code> 또는 <code>nvm</code> 추가 설치 권장.
+                        처음엔 brew node 하나로 충분합니다.
+                    </div>
+                </section>
+
+                <!-- STEP 5 -->
+                <section class="step" id="step-5">
+                    <div class="header">
+                        <div class="step-badge">5</div>
+                        <h2>Claude Code 설치</h2>
+                        <span class="time">~3분</span>
+                    </div>
+                    <p class="desc">
+                        Anthropic 공식 CLI. 지금 우리가 대화하는 이 도구입니다.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>npm install -g @anthropic-ai/claude-code</code></pre>
+
+                    <h3>첫 실행 + 인증</h3>
+                    <pre><span class="lang-tag">terminal</span><code>claude</code></pre>
+                    <p>
+                        브라우저가 자동으로 열립니다 → Anthropic 계정으로 로그인 →
+                        토큰이 자동 저장됩니다.
+                    </p>
+
+                    <h3>확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>claude --version</code></pre>
+                </section>
+
+                <!-- STEP 6 -->
+                <section class="step" id="step-6">
+                    <div class="header">
+                        <div class="step-badge">6</div>
+                        <h2>Git & GitHub 셋업</h2>
+                        <span class="time">~5분</span>
+                    </div>
+
+                    <h3>본인 정보 설정</h3>
+                    <pre><span class="lang-tag">terminal</span><code>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</code></pre>
+
+                    <h3>SSH 키 생성</h3>
+                    <pre><span class="lang-tag">terminal</span><code>ssh-keygen -t ed25519 -C "you@example.com"
+# 엔터 3번 (기본 경로, 비밀번호 생략)
+
+cat ~/.ssh/id_ed25519.pub | pbcopy
+# → 클립보드에 공개키 복사됨</code></pre>
+                    <p>
+                        GitHub 접속 → Settings → SSH and GPG keys → <strong>New SSH key</strong>
+                        → 붙여넣기 → 저장.
+                    </p>
+
+                    <h3>연결 확인</h3>
+                    <pre><span class="lang-tag">terminal</span><code>ssh -T git@github.com
+# Hi yourname! You've successfully authenticated...</code></pre>
+
+                    <h3>gh CLI (선택, 추천)</h3>
+                    <pre><span class="lang-tag">terminal</span><code>brew install gh
+gh auth login</code></pre>
+                </section>
+
+                <!-- STEP 7 -->
+                <section class="step" id="step-7">
+                    <div class="header">
+                        <div class="step-badge">7</div>
+                        <h2>Oh My Claude Code (OMC)</h2>
+                        <span class="time">~2분</span>
+                    </div>
+                    <p class="desc">
+                        멀티 에이전트 오케스트레이션 레이어. 8단계 디자인 파이프라인,
+                        executor·planner·reviewer 같은 전문 에이전트, 자동 메모리 시스템을 제공.
+                    </p>
+
+                    <p>Claude Code 실행한 상태에서:</p>
+                    <pre><span class="lang-tag">claude</span><code>setup omc</code></pre>
+                    <p class="muted">또는 <code>/oh-my-claudecode:omc-setup</code> 슬래시 명령.</p>
+
+                    <h3>설치 확인</h3>
+                    <pre><span class="lang-tag">claude</span><code>/oh-my-claudecode:omc-doctor</code></pre>
+                    <p class="muted">
+                        설치 결과는 <code>~/.claude/</code> 아래 agents·skills·hooks·memory 폴더로 깔립니다.
+                    </p>
+                </section>
+
+                <!-- STEP 8 -->
+                <section class="step" id="step-8">
+                    <div class="header">
+                        <div class="step-badge">8</div>
+                        <h2>Figma MCP 연결</h2>
+                        <span class="time">~5분</span>
+                    </div>
+                    <p class="desc">
+                        Figma 디자인을 Claude가 직접 읽고 React 코드로 변환할 수 있게 해줌.
+                    </p>
+
+                    <h3>1) Figma 데스크탑 앱 설치</h3>
+                    <pre><span class="lang-tag">terminal</span><code>brew install --cask figma</code></pre>
+
+                    <h3>2) Figma Dev Mode MCP 활성화</h3>
+                    <p>
+                        Figma 데스크탑 → Preferences → <strong>Enable Dev Mode MCP Server</strong> 체크.
+                    </p>
+                    <div class="callout warn">
+                        <strong>⚠️ 중요</strong> · Figma는 반드시 <strong>데스크탑 앱</strong>이어야 합니다.
+                        웹 브라우저 버전은 MCP 연결 안 됩니다.
+                    </div>
+
+                    <h3>3) Claude Code에서 MCP 등록</h3>
+                    <pre><span class="lang-tag">claude</span><code>/oh-my-claudecode:mcp-setup</code></pre>
+                    <p>Figma 선택 → 인증 흐름 따라가기.</p>
+                </section>
+
+                <!-- STEP 9 -->
+                <section class="step" id="step-9">
+                    <div class="header">
+                        <div class="step-badge">9</div>
+                        <h2>에디터 (선택)</h2>
+                        <span class="time">~3분</span>
+                    </div>
+                    <p class="desc">
+                        Claude Code만으로도 작업 가능하지만, 코드 보고 싶을 때 VS Code가 표준.
+                    </p>
+                    <pre><span class="lang-tag">terminal</span><code>brew install --cask visual-studio-code
+
+# Claude Code 익스텐션
+code --install-extension anthropic.claude-code</code></pre>
+                </section>
+
+                <!-- STEP 10 -->
+                <section class="step" id="step-10">
+                    <div class="header">
+                        <div class="step-badge">10</div>
+                        <h2>디자인 시스템 프로젝트 시작</h2>
+                        <span class="time">~5분</span>
+                    </div>
+                    <p class="desc">
+                        오늘 우리가 한 것 — Untitled UI 스타터로 React 디자인 시스템 시작.
+                    </p>
+
+                    <pre><span class="lang-tag">terminal</span><code>mkdir -p ~/works/design && cd ~/works/design
+
+# Untitled UI 공식 Vite 스타터 클론
+npx degit untitleduico/untitledui-vite-starter-kit design-system
+
+cd design-system
+npm install
+npm run dev
+# → http://localhost:5173 접속</code></pre>
+
+                    <h3>이후 Claude Code로 작업</h3>
+                    <pre><span class="lang-tag">terminal</span><code>cd ~/works/design
+claude</code></pre>
+                    <p>대화창에 자연어로:</p>
+                    <ul>
+                        <li>"Untitled UI 컴포넌트 추가해줘"</li>
+                        <li>"Figma URL 줄게 이거 React로 변환"</li>
+                        <li>"다크모드 토글 동작하게 만들어줘"</li>
+                    </ul>
+                </section>
+
+                <!-- CHECKLIST -->
+                <section class="step" id="checklist">
+                    <div class="header">
+                        <div class="step-badge">✓</div>
+                        <h2>최종 체크리스트</h2>
+                    </div>
+                    <p class="desc">셋업이 끝났는지 한 번에 확인.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th>확인 명령</th>
+                                <th>기대 결과</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Xcode CLT</td>
+                                <td><code>git --version</code></td>
+                                <td>2.x</td>
+                            </tr>
+                            <tr>
+                                <td>zsh + oh-my-zsh</td>
+                                <td><code>echo $SHELL && ls ~/.oh-my-zsh</code></td>
+                                <td>/bin/zsh + 폴더 존재</td>
+                            </tr>
+                            <tr>
+                                <td>Homebrew</td>
+                                <td><code>brew --version</code></td>
+                                <td>4.x</td>
+                            </tr>
+                            <tr>
+                                <td>Ghostty</td>
+                                <td>(앱 실행)</td>
+                                <td>터미널 뜸</td>
+                            </tr>
+                            <tr>
+                                <td>Node</td>
+                                <td><code>node -v</code></td>
+                                <td>v20+</td>
+                            </tr>
+                            <tr>
+                                <td>Claude Code</td>
+                                <td><code>claude --version</code></td>
+                                <td>버전 출력</td>
+                            </tr>
+                            <tr>
+                                <td>Git/SSH</td>
+                                <td><code>ssh -T git@github.com</code></td>
+                                <td>"Hi yourname!"</td>
+                            </tr>
+                            <tr>
+                                <td>OMC</td>
+                                <td><code>/oh-my-claudecode:omc-doctor</code></td>
+                                <td>모두 OK</td>
+                            </tr>
+                            <tr>
+                                <td>Figma MCP</td>
+                                <td>Figma 앱 + Dev Mode</td>
+                                <td>연결됨</td>
+                            </tr>
+                            <tr>
+                                <td>Vite dev</td>
+                                <td><code>npm run dev</code></td>
+                                <td>localhost:5173</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- TROUBLESHOOTING -->
+                <section class="step" id="troubleshoot">
+                    <div class="header">
+                        <div class="step-badge">!</div>
+                        <h2>자주 막히는 지점</h2>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 35%">증상</th>
+                                <th>해결</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>brew: command not found</code></td>
+                                <td>PATH 다시 등록: <code>eval "$(/opt/homebrew/bin/brew shellenv)"</code></td>
+                            </tr>
+                            <tr>
+                                <td>oh-my-zsh 색이 변함 없음</td>
+                                <td><code>source ~/.zshrc</code> 실행했는지, 새 터미널 창을 열었는지 확인</td>
+                            </tr>
+                            <tr>
+                                <td>plugins=() 안 먹힘</td>
+                                <td>~/.zshrc 안에 다른 <code>plugins=(...)</code>가 또 있는 경우. 한 줄만 남기기.</td>
+                            </tr>
+                            <tr>
+                                <td><code>claude</code> 인증 안 됨</td>
+                                <td>브라우저 자동으로 안 열리면 출력된 URL을 직접 복사해서 열기</td>
+                            </tr>
+                            <tr>
+                                <td><code>npm install</code> 권한 에러</td>
+                                <td>
+                                    <strong>sudo 절대 X</strong>. 대신:
+                                    <code>npm config set prefix ~/.npm-global</code> 후 PATH 추가
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Figma MCP 연결 실패</td>
+                                <td>Figma 데스크탑 앱이 <strong>켜져 있어야</strong> 함. 웹 브라우저 버전은 안 됨.</td>
+                            </tr>
+                            <tr>
+                                <td>Rosetta 필요한 도구 만남</td>
+                                <td>
+                                    드물게 ARM 미지원 도구는 <code>softwareupdate --install-rosetta</code> 실행 후 사용.
+                                    Homebrew·Node·Claude Code 모두 ARM 네이티브 지원이라 보통 불필요.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ghostty 한글 입력 이상</td>
+                                <td>설정에서 <code>keybind = clear</code> 후 시스템 한영 단축키 재등록</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <footer>
+                    <div>
+                        Generated for <strong>Starzip Design System</strong> ·
+                        2026.04.30
+                    </div>
+                    <div>
+                        <span class="badge success">macOS 14+</span>
+                        <span class="badge success">M-series Only</span>
+                    </div>
+                </footer>
+            </main>
+        </div>
+    </body>
+</html>

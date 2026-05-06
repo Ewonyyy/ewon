@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Dashboard — 토큰 사용량 & 거래량</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-start: #f5f1ea;
+    --bg-end: #e8e0d3;
+    --surface: #ffffff;
+    --surface-soft: #faf8f4;
+    --text: #1a1a1a;
+    --text-mute: #6b6b6b;
+    --text-faint: #999999;
+    --border: #f0ebe1;
+    --accent: #c2410c;
+    --accent-soft: #fff1eb;
+    --blue: #2563eb;
+    --blue-soft: #ebf2ff;
+    --green: #16a34a;
+    --green-soft: #ecfdf3;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --rose: #e11d48;
+    --rose-soft: #ffe4e6;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Apple SD Gothic Neo", sans-serif;
+    background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    color: var(--text);
+    line-height: 1.55;
+    min-height: 100vh;
+    padding: 32px 28px;
+  }
+  .shell { max-width: 1280px; margin: 0 auto; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-mark {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #3a3a3a 100%);
+    color: #fbbf24;
+    display: grid; place-items: center;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -0.04em;
+  }
+  .brand-meta h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .brand-meta p {
+    font-size: 0.82rem;
+    color: var(--text-mute);
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    background: var(--surface);
+    padding: 5px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-mute);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: none;
+    background: transparent;
+    font-weight: 500;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.active {
+    background: var(--text);
+    color: #fff;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn {
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--text);
+    color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.18); }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c2410c, #d97706);
+    color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  /* ---------- KPI cards ---------- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+  .kpi {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 22px 22px 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,0.08); }
+  .kpi-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    margin-bottom: 14px;
+  }
+  .kpi-icon svg { width: 20px; height: 20px; }
+  .kpi-label {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .kpi-delta.up   { background: var(--green-soft); color: var(--green); }
+  .kpi-delta.down { background: var(--rose-soft);  color: var(--rose); }
+  .kpi-foot {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+
+  /* color variants for kpi */
+  .kpi.tone-accent .kpi-icon { background: var(--accent-soft); color: var(--accent); }
+  .kpi.tone-blue   .kpi-icon { background: var(--blue-soft);   color: var(--blue); }
+  .kpi.tone-green  .kpi-icon { background: var(--green-soft);  color: var(--green); }
+  .kpi.tone-amber  .kpi-icon { background: var(--amber-soft);  color: var(--amber); }
+
+  /* ---------- Layout grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+  .panel {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .panel-head h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .panel-head p {
+    font-size: 0.82rem;
+    color: var(--text-mute);
+  }
+  .legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    font-size: 0.78rem;
+    color: var(--text-mute);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+  }
+
+  /* ---------- Chart (line) ---------- */
+  .chart-wrap { position: relative; }
+  .chart-svg { width: 100%; height: auto; display: block; }
+
+  /* ---------- Donut ---------- */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .donut-svg { width: 170px; height: 170px; flex-shrink: 0; }
+  .donut-center {
+    fill: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .donut-center-sub {
+    fill: var(--text-faint);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .donut-legend {
+    flex: 1;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .donut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+  .donut-row-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .donut-row-val {
+    color: var(--text-faint);
+    font-size: 0.82rem;
+  }
+
+  /* ---------- Bars (transactions) ---------- */
+  .bars-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    align-items: end;
+    height: 170px;
+    margin-top: 8px;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar-stack {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 6px 6px 0 0;
+    overflow: hidden;
+    transition: transform 0.18s ease;
+  }
+  .bar-stack:hover { transform: translateY(-3px); }
+  .bar-segment { width: 100%; }
+  .bar-segment.input  { background: var(--accent); }
+  .bar-segment.output { background: #f59e0b; }
+  .bar-segment.cache  { background: #1a1a1a; }
+  .bar-label {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-weight: 500;
+  }
+
+  /* ---------- Table ---------- */
+  .table-wrap {
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .table-head {
+    padding: 22px 24px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .table-head h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .table-head p {
+    font-size: 0.82rem;
+    color: var(--text-mute);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface-soft); }
+  th {
+    text-align: left;
+    padding: 12px 24px;
+    font-size: 0.74rem;
+    color: var(--text-mute);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+  }
+  tbody tr { transition: background 0.15s ease; }
+  tbody tr:hover { background: var(--surface-soft); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pill.opus   { background: var(--accent-soft); color: var(--accent); }
+  .pill.sonnet { background: var(--blue-soft);   color: var(--blue); }
+  .pill.haiku  { background: var(--green-soft);  color: var(--green); }
+  .pill.ok     { background: var(--green-soft);  color: var(--green); }
+  .pill.warn   { background: var(--amber-soft);  color: var(--amber); }
+  .pill.fail   { background: var(--rose-soft);   color: var(--rose); }
+
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  th.num { text-align: right; }
+
+  footer {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.82rem;
+    margin-top: 28px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 960px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 20px 14px; }
+    .panel { padding: 18px; }
+    th, td { padding: 12px 14px; }
+    .table-head { padding: 18px 14px 10px; }
+    .kpi-value { font-size: 1.55rem; }
+    .bars-grid { height: 140px; }
+    .bar-label { font-size: 0.66rem; }
+    .donut-svg { width: 140px; height: 140px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">CC</div>
+      <div class="brand-meta">
+        <h1>Usage Analytics</h1>
+        <p>토큰 사용량 · 거래량 · 모델 분포</p>
+      </div>
+    </div>
+    <div class="filters" role="tablist" aria-label="기간 필터">
+      <button class="chip">24H</button>
+      <button class="chip">7D</button>
+      <button class="chip active">30D</button>
+      <button class="chip">90D</button>
+      <button class="chip">YTD</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary">+ 리포트 내보내기</button>
+      <div class="avatar" title="user">EW</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <section class="kpis" aria-label="핵심 지표">
+    <div class="kpi tone-accent">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+      </div>
+      <div class="kpi-label">총 토큰</div>
+      <div class="kpi-value">42.8M</div>
+      <span class="kpi-delta up">▲ 12.4%</span>
+      <div class="kpi-foot">전 기간 대비 · 30일</div>
+    </div>
+
+    <div class="kpi tone-blue">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+      </div>
+      <div class="kpi-label">총 거래량</div>
+      <div class="kpi-value">128,495</div>
+      <span class="kpi-delta up">▲ 8.7%</span>
+      <div class="kpi-foot">API 호출 수 · 30일</div>
+    </div>
+
+    <div class="kpi tone-green">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div class="kpi-label">총 비용</div>
+      <div class="kpi-value">$3,842</div>
+      <span class="kpi-delta down">▼ 2.1%</span>
+      <div class="kpi-foot">캐시 적중률 상승 효과</div>
+    </div>
+
+    <div class="kpi tone-amber">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div class="kpi-label">평균 응답속도</div>
+      <div class="kpi-value">1.42s</div>
+      <span class="kpi-delta up">▲ 0.18s</span>
+      <div class="kpi-foot">P50 latency · 30일</div>
+    </div>
+  </section>
+
+  <!-- Charts row -->
+  <section class="grid">
+
+    <!-- Token usage line chart -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>토큰 사용량 추이</h2>
+          <p>입력 / 출력 / 캐시 토큰을 일자별로 집계</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#c2410c"></span>Input</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Output</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#1a1a1a"></span>Cache hit</span>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg class="chart-svg" viewBox="0 0 700 260" preserveAspectRatio="none" aria-label="토큰 사용량 라인 차트">
+          <!-- grid -->
+          <g stroke="#f0ebe1" stroke-width="1">
+            <line x1="40" y1="40"  x2="690" y2="40"/>
+            <line x1="40" y1="100" x2="690" y2="100"/>
+            <line x1="40" y1="160" x2="690" y2="160"/>
+            <line x1="40" y1="220" x2="690" y2="220"/>
+          </g>
+          <!-- y labels -->
+          <g fill="#999" font-size="10" font-family="-apple-system, sans-serif">
+            <text x="6" y="44">2.0M</text>
+            <text x="6" y="104">1.5M</text>
+            <text x="6" y="164">1.0M</text>
+            <text x="6" y="224">0.5M</text>
+          </g>
+          <!-- x labels -->
+          <g fill="#999" font-size="10" font-family="-apple-system, sans-serif" text-anchor="middle">
+            <text x="80"  y="248">D-30</text>
+            <text x="190" y="248">D-24</text>
+            <text x="300" y="248">D-18</text>
+            <text x="410" y="248">D-12</text>
+            <text x="520" y="248">D-6</text>
+            <text x="660" y="248">Today</text>
+          </g>
+
+          <!-- cache (filled area + line) -->
+          <path d="M40,210 L80,205 L130,200 L180,190 L230,185 L280,178 L330,168 L380,160 L430,150 L480,140 L530,128 L580,118 L630,108 L690,95 L690,240 L40,240 Z"
+                fill="#1a1a1a" opacity="0.06"/>
+          <path d="M40,210 L80,205 L130,200 L180,190 L230,185 L280,178 L330,168 L380,160 L430,150 L480,140 L530,128 L580,118 L630,108 L690,95"
+                fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- output -->
+          <path d="M40,180 L80,178 L130,170 L180,160 L230,162 L280,148 L330,140 L380,142 L430,128 L480,120 L530,110 L580,118 L630,98 L690,88"
+                fill="none" stroke="#f59e0b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- input -->
+          <path d="M40,150 L80,140 L130,135 L180,118 L230,122 L280,108 L330,96 L380,100 L430,82 L480,76 L530,68 L580,72 L630,52 L690,44"
+                fill="none" stroke="#c2410c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- last point dot -->
+          <circle cx="690" cy="44" r="4" fill="#c2410c"/>
+          <circle cx="690" cy="44" r="9" fill="#c2410c" opacity="0.18"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Donut: model mix -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>모델별 분포</h2>
+          <p>토큰 기준 사용 비율</p>
+        </div>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 120 120" aria-label="모델 분포 도넛">
+          <!-- Sonnet 58% (0 ~ 208.8deg) -->
+          <circle r="45" cx="60" cy="60" fill="none" stroke="#2563eb" stroke-width="18"
+                  stroke-dasharray="164.0 282.7" transform="rotate(-90 60 60)"/>
+          <!-- Opus 27% (next 97.2deg) starts at 208.8 -->
+          <circle r="45" cx="60" cy="60" fill="none" stroke="#c2410c" stroke-width="18"
+                  stroke-dasharray="76.3 282.7" stroke-dashoffset="-164.0" transform="rotate(-90 60 60)"/>
+          <!-- Haiku 15% remaining -->
+          <circle r="45" cx="60" cy="60" fill="none" stroke="#16a34a" stroke-width="18"
+                  stroke-dasharray="42.4 282.7" stroke-dashoffset="-240.3" transform="rotate(-90 60 60)"/>
+          <text class="donut-center" x="60" y="60" text-anchor="middle">42.8M</text>
+          <text class="donut-center-sub" x="60" y="74" text-anchor="middle">TOKENS</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="donut-row">
+            <span class="donut-row-name"><span class="legend-dot" style="background:#2563eb"></span>Sonnet 4.6</span>
+            <span class="donut-row-val">58% · 24.8M</span>
+          </div>
+          <div class="donut-row">
+            <span class="donut-row-name"><span class="legend-dot" style="background:#c2410c"></span>Opus 4.7</span>
+            <span class="donut-row-val">27% · 11.6M</span>
+          </div>
+          <div class="donut-row">
+            <span class="donut-row-name"><span class="legend-dot" style="background:#16a34a"></span>Haiku 4.5</span>
+            <span class="donut-row-val">15% · 6.4M</span>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 18px">
+
+      <div class="panel-head" style="margin-bottom:10px">
+        <div>
+          <h2 style="font-size:0.95rem">주간 거래량</h2>
+          <p>요일별 API 호출 (input · output · cache)</p>
+        </div>
+      </div>
+      <div class="bars-grid" role="img" aria-label="주간 거래량 막대 차트">
+        <!-- Mon -->
+        <div class="bar-col">
+          <div class="bar-stack" style="height:62%">
+            <div class="bar-segment cache" style="height:18%"></div>
+            <div class="bar-segment output" style="height:32%"></div>
+            <div class="bar-segment input" style="height:50%"></div>
+          </div>
+          <span class="bar-label">월</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:78%">
+            <div class="bar-segment cache" style="height:22%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:48%"></div>
+          </div>
+          <span class="bar-label">화</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:84%">
+            <div class="bar-segment cache" style="height:24%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:46%"></div>
+          </div>
+          <span class="bar-label">수</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:92%">
+            <div class="bar-segment cache" style="height:26%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:44%"></div>
+          </div>
+          <span class="bar-label">목</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:100%">
+            <div class="bar-segment cache" style="height:30%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:40%"></div>
+          </div>
+          <span class="bar-label">금</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:48%">
+            <div class="bar-segment cache" style="height:18%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:52%"></div>
+          </div>
+          <span class="bar-label">토</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:38%">
+            <div class="bar-segment cache" style="height:14%"></div>
+            <div class="bar-segment output" style="height:30%"></div>
+            <div class="bar-segment input" style="height:56%"></div>
+          </div>
+          <span class="bar-label">일</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent transactions table -->
+  <section class="table-wrap">
+    <div class="table-head">
+      <div>
+        <h2>최근 거래 내역</h2>
+        <p>최신 API 호출 10건</p>
+      </div>
+      <div class="filters">
+        <button class="chip active">전체</button>
+        <button class="chip">Opus</button>
+        <button class="chip">Sonnet</button>
+        <button class="chip">Haiku</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>시각</th>
+          <th>요청 ID</th>
+          <th>모델</th>
+          <th class="num">입력 토큰</th>
+          <th class="num">출력 토큰</th>
+          <th class="num">비용</th>
+          <th>상태</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>14:28:12</td>
+          <td><code>req_8a7f…3b2c</code></td>
+          <td><span class="pill opus">Opus</span></td>
+          <td class="num">18,421</td>
+          <td class="num">3,204</td>
+          <td class="num">$0.842</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:26:51</td>
+          <td><code>req_3d12…91af</code></td>
+          <td><span class="pill sonnet">Sonnet</span></td>
+          <td class="num">7,820</td>
+          <td class="num">1,488</td>
+          <td class="num">$0.094</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:24:03</td>
+          <td><code>req_f0e2…77b8</code></td>
+          <td><span class="pill haiku">Haiku</span></td>
+          <td class="num">2,140</td>
+          <td class="num">812</td>
+          <td class="num">$0.012</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:21:48</td>
+          <td><code>req_9b41…0e57</code></td>
+          <td><span class="pill sonnet">Sonnet</span></td>
+          <td class="num">12,033</td>
+          <td class="num">2,260</td>
+          <td class="num">$0.146</td>
+          <td><span class="pill warn">캐시 미스</span></td>
+        </tr>
+        <tr>
+          <td>14:19:22</td>
+          <td><code>req_5c08…ab1d</code></td>
+          <td><span class="pill opus">Opus</span></td>
+          <td class="num">22,910</td>
+          <td class="num">4,118</td>
+          <td class="num">$1.052</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:17:09</td>
+          <td><code>req_2e74…44c9</code></td>
+          <td><span class="pill haiku">Haiku</span></td>
+          <td class="num">3,402</td>
+          <td class="num">901</td>
+          <td class="num">$0.018</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:14:55</td>
+          <td><code>req_a91f…6d10</code></td>
+          <td><span class="pill sonnet">Sonnet</span></td>
+          <td class="num">9,128</td>
+          <td class="num">2,047</td>
+          <td class="num">$0.111</td>
+          <td><span class="pill fail">실패</span></td>
+        </tr>
+        <tr>
+          <td>14:12:31</td>
+          <td><code>req_b6c3…ef02</code></td>
+          <td><span class="pill opus">Opus</span></td>
+          <td class="num">15,776</td>
+          <td class="num">2,884</td>
+          <td class="num">$0.722</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:10:08</td>
+          <td><code>req_d4a1…2890</code></td>
+          <td><span class="pill sonnet">Sonnet</span></td>
+          <td class="num">6,442</td>
+          <td class="num">1,103</td>
+          <td class="num">$0.078</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+        <tr>
+          <td>14:07:44</td>
+          <td><code>req_71fa…c6b3</code></td>
+          <td><span class="pill haiku">Haiku</span></td>
+          <td class="num">1,820</td>
+          <td class="num">644</td>
+          <td class="num">$0.009</td>
+          <td><span class="pill ok">완료</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    Generated with Claude Code · 2026-04-30
+  </footer>
+
+</div>
+
+<script>
+  // 작은 인터랙션: 필터 칩 활성 상태 토글
+  document.querySelectorAll('.filters').forEach(group => {
+    group.addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
